@@ -92,7 +92,8 @@ shinyServer(function(input, output, session) {
     rimg = makenii()$rimg
     message("slider")
 		sliderInput("window", "Range of Data:",
-                min = rimg[1], max = rimg[2], value = rimg)
+                min = rimg[1], max = rimg[2], 
+                value = c(max(0, rimg[1]), min(100, rimg[2]))
 	})  
 	
 
@@ -102,17 +103,23 @@ shinyServer(function(input, output, session) {
     # print(window)
     # print(nii)
     if (!is.null(nii)){
-      message('plot')
-      message(paste0("img is ", class(nii)))
-      print(nii)
-      nii@cal_min = window[1]
-      nii@cal_max = window[2]
+      if (input$viewimg) {
 
-      nii[ nii < window[1] ] = window[1]
-      nii[ nii >= window[2] ] = window[2]    
-  		orthographic(nii)
+        message('plot')
+        message(paste0("img is ", class(nii)))
+        print(nii)
+        nii@cal_min = window[1]
+        nii@cal_max = window[2]
+
+        nii[ nii < window[1] ] = window[1]
+        nii[ nii >= window[2] ] = window[2]    
+          orthographic(nii)
+      } else {
+        plot(0, 0, xaxt="n", yaxt="n", pch="", xlab="", ylab="")
+        text(0, 0, "Click view img if you want to see a display")
+      }
     } else {
-        plot(0, 0, xaxt="n", pch="")
+        plot(0, 0, xaxt="n", yaxt="n", pch="", xlab="", ylab="")
       text(0, 0, "Need to upload data")
     }
 	})

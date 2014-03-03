@@ -4,6 +4,7 @@ shinyUI(pageWithSidebar(
   sidebarPanel(
     fileInput("files", "File data", multiple=TRUE),
     uiOutput("sld_window"),
+    checkboxInput("viewimg", "View img?", TRUE),
     checkboxInput("gzipped", "gzip nii?", TRUE),
     textInput("niifname", "Filename of nii (no .nii on it)"),
     downloadButton('dlimg', 'Download NIfTI')
