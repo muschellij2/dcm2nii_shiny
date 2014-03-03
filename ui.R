@@ -1,6 +1,6 @@
 library(shinyIncubator)
 shinyUI(pageWithSidebar(
-  headerPanel("DICOM TO NIfTI Converter"),
+  headerPanel("Online DICOM TO NIfTI Converter"),
   sidebarPanel(
     fileInput("files", "File data", multiple=TRUE),
     uiOutput("sld_window"),
@@ -11,8 +11,7 @@ shinyUI(pageWithSidebar(
   mainPanel(
     progressInit(),
     plotOutput("ortho"),
-
     p("Code on ", 
-      a("GitHub", "https://github.com/muschellij2/dcm2nii_shiny"))
+      a("GitHub", href="https://github.com/muschellij2/dcm2nii_shiny"))
   )
 ))
