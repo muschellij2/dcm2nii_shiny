@@ -8,6 +8,8 @@ shinyUI(pageWithSidebar(
     downloadButton('dlimg', 'Download NIfTI')
   ),
   mainPanel(
-    plotOutput("ortho")
+    plotOutput("ortho"),
+    p("Code on ", 
+      a("GitHub", "https://github.com/muschellij2/dcm2nii_shiny"))
   )
 ))
