@@ -93,7 +93,7 @@ shinyServer(function(input, output, session) {
     message("slider")
 		sliderInput("window", "Range of Data:",
                 min = rimg[1], max = rimg[2], 
-                value = c(max(0, rimg[1]), min(100, rimg[2]))
+                value = c(max(0, rimg[1]), min(100, rimg[2])))
 	})  
 	
 
