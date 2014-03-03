@@ -1,3 +1,4 @@
+library(shinyIncubator)
 shinyUI(pageWithSidebar(
   headerPanel("DICOM TO NIfTI Converter"),
   sidebarPanel(
@@ -8,7 +9,9 @@ shinyUI(pageWithSidebar(
     downloadButton('dlimg', 'Download NIfTI')
   ),
   mainPanel(
+    progressInit(),
     plotOutput("ortho"),
+
     p("Code on ", 
       a("GitHub", "https://github.com/muschellij2/dcm2nii_shiny"))
   )

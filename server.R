@@ -1,63 +1,68 @@
 library(oro.dicom)
 library(oro.nifti)
+library(shiny)
+library(shinyIncubator)
 options(shiny.maxRequestSize = -1)
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
   # output$filetable <- renderTable({
   makenii = reactive({
     rimg = c(0, 100)    
     nii = NULL
-      if (!is.null(input$files)) {
+    if (!is.null(input$files)) {
         # User has not uploaded a file yet
      
         filenames = input$files
-        print(input$files)
+        # print(input$files)
         filenames = file.path(filenames$datapath)
-        print(filenames)
+        # print(filenames)
 
         nfiles <- length(filenames)
         nch <- nchar(as.character(nfiles))
         headers <- images <- vector("list", nfiles)
         names(images) <- names(headers) <- filenames
-            cat(" ", nfiles, "files to be processed by readDICOM()", 
-                fill = TRUE)
-            tpb <- txtProgressBar(min = 0, max = nfiles, style = 3)
-        for (i in 1:nfiles) {
-            setTxtProgressBar(tpb, i)
-            dcm <- rereadDICOMFile(filenames[i])
-            images[[i]] <- dcm$img
-            headers[[i]] <- dcm$hdr
+            # cat(" ", nfiles, "files to be processed by readDICOM()", 
+            #     fill = TRUE)
+          withProgress(session, min=0, max=nfiles, {            
+              setProgress(message="Reading Data")
+          for (i in 1:nfiles) {
+              setProgress(value =i)
+              dcm <<- rereadDICOMFile(filenames[i])
+              images[[i]] <<- dcm$img
+              headers[[i]] <<- dcm$hdr
+          }
+          })
+          dcm = list(hdr = headers, img = images)
+          # print(head(dcm$hdr))
+
+        ### rescaling on my own
+        dcmtable = dicomTable(dcm$hdr)
+        keepcols = grepl("RescaleIntercept|RescaleSlope|PixelSpacing", 
+                         colnames(dcmtable))
+        dcmtab = dcmtable[, 
+          c("0028-1052-RescaleIntercept", 
+            "0028-1053-RescaleSlope", 
+            "0028-0030-PixelSpacing"),
+          drop=FALSE]
+        stopifnot(ncol(dcmtab) == 3)
+        colnames(dcmtab) = c("intercept", "slope", "pixelspacing")
+
+
+        for (iimg in 1:length(dcm$img)){
+          inter = as.numeric(dcmtab$intercept[iimg])
+          slope = as.numeric(dcmtab$slope[iimg])
+          dcm$img[[iimg]] = dcm$img[[iimg]] * slope + inter
+          x = dcm$img[[iimg]]
+          # if (verbose) print(range(dcm$img[[iimg]]))
+          dcm$img[[iimg]][x < -1024] = -1024
+          dcm$img[[iimg]][x > 3071] = 3071
+      #http://www.medical.siemens.com/siemens/en_GLOBAL/rg_marcom_FBAs/files/brochures/DICOM/ct/DICOM_VA70C.pdf 
+          # for 4095 ranges
         }
-       dcm = list(hdr = headers, img = images)
 
-### rescaling on my own
-  dcmtable = dicomTable(dcm$hdr)
-  keepcols = grepl("RescaleIntercept|RescaleSlope|PixelSpacing", 
-                   colnames(dcmtable))
-  dcmtab = dcmtable[, 
-    c("0028-1052-RescaleIntercept", 
-      "0028-1053-RescaleSlope", 
-      "0028-0030-PixelSpacing"),
-    drop=FALSE]
-  stopifnot(ncol(dcmtab) == 3)
-  colnames(dcmtab) = c("intercept", "slope", "pixelspacing")
-
-
-  for (iimg in 1:length(dcm$img)){
-    inter = as.numeric(dcmtab$intercept[iimg])
-    slope = as.numeric(dcmtab$slope[iimg])
-    dcm$img[[iimg]] = dcm$img[[iimg]] * slope + inter
-    x = dcm$img[[iimg]]
-    # if (verbose) print(range(dcm$img[[iimg]]))
-    dcm$img[[iimg]][x < -1024] = -1024
-    dcm$img[[iimg]][x > 3071] = 3071
-#http://www.medical.siemens.com/siemens/en_GLOBAL/rg_marcom_FBAs/files/brochures/DICOM/ct/DICOM_VA70C.pdf 
-    # for 4095 ranges
-  }
-
-      nii = dicom2nifti(dcm, rescale=FALSE, reslice=FALSE, 
-      descrip = NULL)
-      rimg = range(nii, na.rm=TRUE)
-      	"Finished converting"
+            nii = dicom2nifti(dcm, rescale=FALSE, reslice=FALSE, 
+            descrip = NULL)
+            rimg = range(nii, na.rm=TRUE)
+              "Finished converting"
     }
       return(list(nii=nii, rimg=rimg))
   })
@@ -80,8 +85,8 @@ shinyServer(function(input, output) {
     # print(nii)
     if (!is.null(nii)){
       img = nii
-      # print("img is ")
-      # print(img)
+      print("img is ")
+      print(img)
       img@cal_min = window[1]
       img@cal_max = window[2]
 
