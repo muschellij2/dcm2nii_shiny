@@ -181,7 +181,7 @@ shinyServer(function(input, output, session) {
           withProgress(session, min=0, max=nfiles, {            
               setProgress(message="Reading Data")
           for (i in 1:nfiles) {
-              # setProgress(value =i)
+              setProgress(value =i)
               setTxtProgressBar(pb, i/nfiles)
 
               dd <<- readDICOMFile(filenames[i])
